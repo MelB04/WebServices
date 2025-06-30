@@ -5,7 +5,6 @@ const postgres = require("postgres");
 
 const sql = postgres({ db: "MythicGames", user: "postgres", password: "root" });
 
-
 // Define the service implementation
 const service = {
   ProductsService: {
@@ -19,7 +18,7 @@ const service = {
                 Subcode: { value: "rpc:BadArguments" },
               },
               Reason: { Text: "Processing Error" },
-              statusCode:400, 
+              statusCode: 400,
             },
           };
         }
@@ -32,6 +31,14 @@ const service = {
 
         // Will return only one element.
         callback(product[0]);
+      },
+      GetProducts: async function (_, callback) {
+        const products = await sql`
+            SELECT * FROM products
+            `;
+
+        // Will return only one element.
+        callback(products);
       },
     },
   },
