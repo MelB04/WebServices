@@ -1,0 +1,15 @@
+{
+  "name": "mythicgames",
+  "version": "1.0.0",
+  "description": "marketplace du jeu vidéo de demain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mélanie",
+  "license": "ISC",
+  "dependencies": {
+    "postgres": "^3.4.7",
+    "soap": "^1.1.12"
+  }
+}
