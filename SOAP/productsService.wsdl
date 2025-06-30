@@ -37,13 +37,34 @@
                         <xsd:element maxOccurs="unbounded" ref="Product" />
                     </xsd:sequence>
                 </xsd:complexType>
-            </xsd:element>
+        </xsd:element>
             <xsd:element name="Product">
                 <xsd:element name="id" type="xsd:string" />
                 <xsd:element name="name" type="xsd:string" />
                 <xsd:element name="about" type="xsd:string" />
                 <xsd:element name="price" type="xsd:string" />
             </xsd:element>
+
+      <xsd:element name="PatchProductRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:string" />
+            <xsd:element name="name" type="xsd:string"/>
+            <xsd:element name="about" type="xsd:string"/>
+            <xsd:element name="price" type="xsd:decimal"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="PatchProductResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:string"/>
+            <xsd:element name="name" type="xsd:string"/>
+            <xsd:element name="about" type="xsd:string"/>
+            <xsd:element name="price" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
     </xsd:schema>
 
   </types>
@@ -63,6 +84,13 @@
     <part name="response" element="tns:GetProductsResponse"/>
   </message>
 
+  <message name="PatchProductRequestMessage">
+    <part name="request" element="tns:PatchProductRequest"/>
+  </message>
+    <message name="PatchProductResponseMessage">
+    <part name="response" element="tns:PatchProductResponse"/>
+  </message>
+
   <portType name="ProductsPortType">
     <operation name="CreateProduct">
       <input message="tns:CreateProductRequestMessage"/>
@@ -72,6 +100,12 @@
            <input message="tns:GetProductsRequestMessage"/>
 
       <output message="tns:GetProductsResponseMessage"/>
+    </operation>
+
+    <operation name="PatchProduct">
+           <input message="tns:PatchProductRequestMessage"/>
+
+      <output message="tns:PatchProductResponseMessage"/>
     </operation>
   </portType>
 
@@ -91,6 +125,19 @@
 
     <operation name="GetProducts">
       <soap:operation soapAction="http://localhost:8000/products/GetProducts"/>
+      <input>
+        <soap:body use="encoded" namespace="http://localhost:8000/products"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="http://localhost:8000/products"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+    
+    <operation name="PatchProduct">
+      <soap:operation soapAction="http://localhost:8000/products/PatchProduct"/>
       <input>
         <soap:body use="encoded" namespace="http://localhost:8000/products"
           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

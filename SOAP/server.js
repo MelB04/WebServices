@@ -40,6 +40,79 @@ const service = {
         // Will return only one element.
         callback(products);
       },
+
+      PatchProduct: async function ({ id, name, about, price }, callback) {
+        // Validation des paramètres requis
+        if (!id) {
+          throw {
+            Fault: {
+              Code: {
+                Value: "soap:Sender",
+                Subcode: { value: "rpc:BadArguments" },
+              },
+              Reason: { Text: "Product ID is required" },
+              statusCode: 400,
+            },
+          };
+        }
+
+        if (!name || !about || !price) {
+          throw {
+            Fault: {
+              Code: {
+                Value: "soap:Sender",
+                Subcode: { value: "rpc:BadArguments" },
+              },
+              Reason: { Text: "Name, about, and price are required" },
+              statusCode: 400,
+            },
+          };
+        }
+
+        try {
+          // Vérifier d'abord si le produit existe
+          const existingProduct = await sql`
+      SELECT id FROM products WHERE id = ${id}
+    `;
+
+          if (existingProduct.length === 0) {
+            throw {
+              Fault: {
+                Code: {
+                  Value: "soap:Sender",
+                  Subcode: { value: "rpc:ProductNotFound" },
+                },
+                Reason: { Text: `Product with id '${id}' not found` },
+                statusCode: 404,
+              },
+            };
+          }
+
+          // Mettre à jour le produit
+          const result = await sql`
+      UPDATE products 
+      SET name = ${name}, about = ${about}, price = ${price}
+      WHERE id = ${id}
+      RETURNING id, name, about, price
+    `;
+          callback(result[0]);
+        } catch (error) {
+          if (error.Fault) {
+            throw error;
+          }
+
+          throw {
+            Fault: {
+              Code: {
+                Value: "soap:Server",
+                Subcode: { value: "rpc:InternalError" },
+              },
+              Reason: { Text: "Internal server error during product update" },
+              statusCode: 500,
+            },
+          };
+        }
+      },
     },
   },
 };

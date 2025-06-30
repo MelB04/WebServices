@@ -48,7 +48,39 @@ soap.createClient(
         );
         return;
       }
-      console.log("Result:", result);
+      console.log("Result get :", result);
     });
+  }
+);
+
+soap.createClient(
+  "http://localhost:8000/products?wsdl",
+  {},
+  function (err, client) {
+    if (err) {
+      console.error("Error creating SOAP client:", err);
+      return;
+    }
+    // Make a SOAP request
+    client.PatchProduct(
+      {
+        id: 1,
+        name: "Ma valise HERMES",
+        price: 1500,
+        about: "elle contient mes habits",
+      },
+      function (err, result) {
+        if (err) {
+          console.error(
+            "Error making SOAP request:",
+            err.response.status,
+            err.response.statusText,
+            err.body
+          );
+          return;
+        }
+        console.log("Result update :", result);
+      }
+    );
   }
 );
