@@ -65,6 +65,24 @@
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
+
+      <xsd:element name="DeleteProductRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="DeleteProductResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:string"/>
+            <xsd:element name="name" type="xsd:string"/>
+            <xsd:element name="about" type="xsd:string"/>
+            <xsd:element name="price" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
     </xsd:schema>
 
   </types>
@@ -90,6 +108,14 @@
     <message name="PatchProductResponseMessage">
     <part name="response" element="tns:PatchProductResponse"/>
   </message>
+  
+  <message name="DeleteProductRequestMessage">
+    <part name="request" element="tns:DeleteProductRequest"/>
+  </message>
+    <message name="DeleteProductResponseMessage">
+    <part name="response" element="tns:DeleteProductResponse"/>
+  </message>
+
 
   <portType name="ProductsPortType">
     <operation name="CreateProduct">
@@ -106,6 +132,12 @@
            <input message="tns:PatchProductRequestMessage"/>
 
       <output message="tns:PatchProductResponseMessage"/>
+    </operation>
+
+       <operation name="DeleteProduct">
+           <input message="tns:DeleteProductRequestMessage"/>
+
+      <output message="tns:DeleteProductResponseMessage"/>
     </operation>
   </portType>
 
@@ -138,6 +170,18 @@
     
     <operation name="PatchProduct">
       <soap:operation soapAction="http://localhost:8000/products/PatchProduct"/>
+      <input>
+        <soap:body use="encoded" namespace="http://localhost:8000/products"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="http://localhost:8000/products"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+
+     <operation name="DeleteProduct">
+      <soap:operation soapAction="http://localhost:8000/products/DeleteProduct"/>
       <input>
         <soap:body use="encoded" namespace="http://localhost:8000/products"
           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

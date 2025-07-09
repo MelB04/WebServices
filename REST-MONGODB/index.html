@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Produits en Temps Réel</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #f4f4f8;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+            margin: auto;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        button {
+            margin: 0.5rem 0;
+            padding: 0.6rem;
+            font-size: 1rem;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 2rem;
+            max-width: 600px;
+            margin-inline: auto;
+        }
+
+        li {
+            background: #fff;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .actions button {
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Produits en Temps Réel 🛒</h1>
+
+    <form id="product-form">
+        <input type="hidden" id="product-id">
+        <input type="text" id="name" placeholder="Nom du produit" required />
+        <input type="text" id="about" placeholder="Description" required />
+        <input type="number" id="price" placeholder="Prix (€)" min="0" required />
+        <input type="text" id="categories" placeholder="Catégories (IDs séparés par ,)" />
+        <button type="submit">Créer / Mettre à jour</button>
+    </form>
+
+    <ul id="products"></ul>
+    <script>
+        const socket = io("http://localhost:8000");
+        const form = document.getElementById("product-form");
+        const productsList = document.getElementById("products");
+
+        // API base
+        const API = "http://localhost:8000/products";
+
+        async function fetchProducts() {
+            const res = await fetch(API);
+            const data = await res.json();
+            renderProducts(data);
+        }
+
+        function renderProducts(products) {
+            productsList.innerHTML = "";
+            for (const p of products) {
+                const li = document.createElement("li");
+                li.innerHTML = `
+        <div>
+          <strong>${p.name}</strong> - ${p.price} €<br>
+          <small>${p.about}</small>
+        </div>
+        <div class="actions">
+          <button onclick="editProduct('${p._id}', '${p.name}', '${p.about}', ${p.price}, '${p.categoryIds?.join(',') || ''}')">✏️</button>
+          <button onclick="deleteProduct('${p._id}')">🗑️</button>
+        </div>
+      `;
+                productsList.appendChild(li);
+            }
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("product-id").value;
+            const name = document.getElementById("name").value;
+            const about = document.getElementById("about").value;
+            const price = parseFloat(document.getElementById("price").value);
+            const categoryIds = document.getElementById("categories").value
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+
+            const payload = { name, about, price, categoryIds };
+
+            if (id) {
+                // update
+                await fetch(`${API}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+            } else {
+                // create
+                await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+            }
+
+            form.reset();
+        });
+
+        function editProduct(id, name, about, price, categoryIds) {
+            document.getElementById("product-id").value = id;
+            document.getElementById("name").value = name;
+            document.getElementById("about").value = about;
+            document.getElementById("price").value = price;
+            document.getElementById("categories").value = categoryIds;
+        }
+
+        async function deleteProduct(id) {
+            if (confirm("Confirmer la suppression ?")) {
+                await fetch(`${API}/${id}`, { method: "DELETE" });
+            }
+        }
+
+        // Socket.io event listener
+        socket.on("products", (event) => {
+            console.log("📡 Changement produit :", event);
+            fetchProducts(); // Recharge à chaque changement
+        });
+
+        fetchProducts();
+    </script>
+
+</body>
+
+</html>

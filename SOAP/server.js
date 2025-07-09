@@ -56,14 +56,88 @@ const service = {
           };
         }
 
-        if (!name || !about || !price) {
+        try {
+          // Vérifier d'abord si le produit existe
+          const existingProduct =
+            await sql`SELECT id FROM products WHERE id = ${id}`;
+
+          if (existingProduct.length === 0) {
+            throw {
+              Fault: {
+                Code: {
+                  Value: "soap:Sender",
+                  Subcode: { value: "rpc:ProductNotFound" },
+                },
+                Reason: { Text: `Product with id '${id}' not found` },
+                statusCode: 404,
+              },
+            };
+          }
+
+          const updates = [];
+          const values = [];
+
+          if (name !== undefined) {
+            updates.push(`name = $${updates.length + 1}`);
+            values.push(name);
+          }
+          if (about !== undefined) {
+            updates.push(`about = $${updates.length + 1}`);
+            values.push(about);
+          }
+          if (price !== undefined) {
+            updates.push(`price = $${updates.length + 1}`);
+            values.push(price);
+          }
+
+          if (updates.length === 0) {
+            throw {
+              Fault: {
+                Code: {
+                  Value: "soap:Sender",
+                  Subcode: { value: "rpc:NoFieldsToUpdate" },
+                },
+                Reason: { Text: "No fields to update provided" },
+                statusCode: 400,
+              },
+            };
+          }
+
+          values.push(id);
+          const updateQuery = `
+    UPDATE products
+    SET ${updates.join(", ")}
+    WHERE id = $${values.length}
+    RETURNING *
+  `;
+
+          callback(updateQuery[0]);
+        } catch (error) {
+          if (error.Fault) {
+            throw error;
+          }
+
+          throw {
+            Fault: {
+              Code: {
+                Value: "soap:Server",
+                Subcode: { value: "rpc:InternalError" },
+              },
+              Reason: { Text: "Internal server error during product update" },
+              statusCode: 500,
+            },
+          };
+        }
+      },
+      DeleteProduct: async function ({ id }, callback) {
+        if (!id) {
           throw {
             Fault: {
               Code: {
                 Value: "soap:Sender",
                 Subcode: { value: "rpc:BadArguments" },
               },
-              Reason: { Text: "Name, about, and price are required" },
+              Reason: { Text: "Product ID is required" },
               statusCode: 400,
             },
           };
@@ -90,10 +164,9 @@ const service = {
 
           // Mettre à jour le produit
           const result = await sql`
-      UPDATE products 
-      SET name = ${name}, about = ${about}, price = ${price}
+      Delete FROM products 
       WHERE id = ${id}
-      RETURNING id, name, about, price
+      RETURNING *
     `;
           callback(result[0]);
         } catch (error) {
